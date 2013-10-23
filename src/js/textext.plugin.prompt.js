@@ -134,15 +134,22 @@
 		if(prompt)
 			self.setPrompt(prompt);
 
-		if($.trim(self.val()).length > 0)
-			self.hidePrompt();
-
 		self.on({
 			blur           : self.onBlur,
 			focus          : self.onFocus,
 			postInvalidate : self.onPostInvalidate,
 			postInit       : self.onPostInit
 		});
+	};
+
+	p.__isEmpty = function () {
+		if ($.trim(this.val()).length > 0)
+			return false;
+
+		if (typeof this.core()._plugins.tags != 'undefined' && this.core()._plugins.tags.tagElements().length > 0)
+			return false;
+
+		return true;
 	};
 
 	//--------------------------------------------------------------------------------
@@ -159,8 +166,9 @@
 	 * @date 2011/08/24
 	 * @id TextExtPrompt.onPostInit
 	 */
-	p.onPostInit = function(e)
-	{
+	p.onPostInit = function(e) {
+		if (!this.__isEmpty())
+			this.hidePrompt();
 		this.invalidateBounds();
 	};
 
@@ -239,8 +247,8 @@
 		var self     = this,
 			input    = self.input()
 			;
-		
-		if($.trim(self.val()).length === 0 && !input.is(':focus'))
+
+		if (self.__isEmpty() && !input.is(':focus'))
 			self.containerElement().removeClass(CSS_HIDE_PROMPT);
 	};
 
@@ -273,7 +281,7 @@
 	{
 		this.hidePrompt();
 	};
-	
+
 	//--------------------------------------------------------------------------------
 	// Core functionality
 
