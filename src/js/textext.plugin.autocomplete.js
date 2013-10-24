@@ -61,6 +61,18 @@
 		OPT_ENABLED = 'autocomplete.enabled',
 
 		/**
+		 * Whenever a suggestions is empty, the message specified in this option will appear in the drop
+		 * down.
+		 *
+		 * @name autocomplete.emptySuggestionsMessage
+		 * @default ''
+		 * @author ar7z1
+		 * @date 2013/10/24
+		 * @id TextExtAutocomplete.options.autocomplete.emptySuggestionsMessage
+		 */
+		OPT_EMPTY_SUGGESTIONS_MESSAGE = 'autocomplete.emptySuggestionsMessage',
+
+		/**
 		 * This option allows to specify position of the dropdown. The two possible values
 		 * are `above` and `below`.
 		 *
@@ -142,7 +154,7 @@
 		 * @date 2011/08/17
 		 * @id TextExtAutocomplete.events
 		 */
-	
+
 		/**
 		 * Autocomplete plugin triggers and reacts to the `hideDropdown` to hide the dropdown if it's 
 		 * already visible.
@@ -153,6 +165,17 @@
 		 * @id TextExtAutocomplete.events.hideDropdown
 		 */
 		EVENT_HIDE_DROPDOWN = 'hideDropdown',
+
+		/**
+		 * Autocomplete plugin triggers and reacts to the `showEmptySuggestionsMessage` to show the
+		 * message for empty suggestions.
+		 *
+		 * @name showEmptyResults
+		 * @author ar7z1
+		 * @date 2013/10/24
+		 * @id TextExtAutocomplete.events.showEmptyResults
+		 */
+		EVENT_SHOW_EMPTY_SUGGESTIONS_MESSAGE = 'showEmptySuggestionsMessage',
 
 		/**
 		 * Autocomplete plugin triggers and reacts to the `showDropdown` to show the dropdown if it's 
@@ -234,6 +257,7 @@
 		DEFAULT_OPTS = {
 			autocomplete : {
 				enabled : true,
+				emptySuggestionsMessage : '',
 				dropdown : {
 					position : POSITION_BELOW,
 					maxHeight : '100px'
@@ -271,18 +295,19 @@
 		if(self.opts(OPT_ENABLED) === true)
 		{
 			self.on({
-				blur              : self.onBlur,
-				anyKeyUp          : self.onAnyKeyUp,
-				deleteKeyUp       : self.onAnyKeyUp,
-				backspaceKeyPress : self.onBackspaceKeyPress,
-				enterKeyPress     : self.onEnterKeyPress,
-				escapeKeyPress    : self.onEscapeKeyPress,
-				setSuggestions    : self.onSetSuggestions,
-				showDropdown      : self.onShowDropdown,
-				hideDropdown      : self.onHideDropdown,
-				toggleDropdown    : self.onToggleDropdown,
-				postInvalidate    : self.positionDropdown,
-				getFormData       : self.onGetFormData,
+				blur                        : self.onBlur,
+				anyKeyUp                    : self.onAnyKeyUp,
+				deleteKeyUp                 : self.onAnyKeyUp,
+				backspaceKeyPress           : self.onBackspaceKeyPress,
+				enterKeyPress               : self.onEnterKeyPress,
+				escapeKeyPress              : self.onEscapeKeyPress,
+				setSuggestions              : self.onSetSuggestions,
+				showDropdown                : self.onShowDropdown,
+				hideDropdown                : self.onHideDropdown,
+				showEmptySuggestionsMessage : self.onShowEmptySuggestionsMessage,
+				toggleDropdown              : self.onToggleDropdown,
+				postInvalidate              : self.positionDropdown,
+				getFormData                 : self.onGetFormData,
 
 				// using keyDown for up/down keys so that repeat events are
 				// captured and user can scroll up/down by holding the keys
@@ -709,6 +734,19 @@
 		this.hideDropdown();
 	};
 
+	p.onShowEmptySuggestionsMessage = function (e)
+	{
+		var self = this;
+		if (self.opts(OPT_EMPTY_SUGGESTIONS_MESSAGE))
+		{
+			self.trigger(EVENT_SHOW_DROPDOWN, function(autocomplete) {
+				autocomplete.clearItems();
+				var node = autocomplete.addDropdownItem(self.opts(OPT_EMPTY_SUGGESTIONS_MESSAGE));
+				node.addClass('text-emptySuggestions');
+			});
+		}
+	};
+
 	/**
 	 * Reacts to the 'toggleDropdown` event and shows or hides the dropdown depending if
 	 * it's currently hidden or visible.
@@ -808,7 +846,12 @@
 			;
 
 		if(data.showHideDropdown !== false)
-			self.trigger(suggestions === null || suggestions.length === 0 ? EVENT_HIDE_DROPDOWN : EVENT_SHOW_DROPDOWN);
+		{
+			if (suggestions === null || suggestions.length === 0)
+				self.trigger(!self.opts(OPT_EMPTY_SUGGESTIONS_MESSAGE) ? EVENT_HIDE_DROPDOWN : EVENT_SHOW_EMPTY_SUGGESTIONS_MESSAGE);
+			else
+				self.trigger(EVENT_SHOW_DROPDOWN);
+		}
 	};
 
 	/**
