@@ -71,6 +71,17 @@
 		OPT_ITEMS = 'filter.items',
 
 		/**
+		 * This is a toggle switch to allow or disallow adding of duplicated tags.
+		 *
+		 * @name tags.unique
+		 * @default false
+		 * @author ar7z1
+		 * @date 2013/10/24
+		 * @id TextExtTags.options.tags.unique
+		 */
+		OPT_UNIQUE = 'tags.unique',
+
+		/**
 		 * Filter plugin dispatches and reacts to the following events.
 		 *
 		 * @author agorbatchev
@@ -106,6 +117,9 @@
 			filter : {
 				enabled : true,
 				items : null
+			},
+			tags: {
+				unique: false
 			}
 		}
 		;
@@ -221,7 +235,7 @@
 	 */
 	p.onIsTagAllowed = function(e, data)
 	{
-		data.result = this.isValueAllowed(data.tag);
+		data.result = this.isValueAllowed(data.tag) && (!this.opts(OPT_UNIQUE) || !this.core()._plugins.tags.getTagElement(data.tag));
 	};
 
 	/**
@@ -237,6 +251,18 @@
 	 */
 	p.onSetSuggestions = function(e, data)
 	{
-		this._suggestions = data.result;
+		var self = this;
+		self._suggestions = data.result;
+
+		if (self.core().hasPlugin('tags') && self.opts(OPT_UNIQUE)) {
+			var newSuggestions = data.result.filter(function (x) {
+				return !self.core()._plugins.tags.getTagElement(x);
+			});
+
+			if (data.result.length != newSuggestions.length) {
+				e.stopPropagation();
+				self.trigger('setSuggestions', { result: newSuggestions });
+			}
+		}
 	};
 })(jQuery);
