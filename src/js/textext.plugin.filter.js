@@ -208,7 +208,7 @@
 	p.isValueAllowed = function(value)
 	{
 		var self        = this,
-			list        = self.opts(OPT_ITEMS) || self._suggestions || [],
+			list        = self._suggestions || self.opts(OPT_ITEMS) || [],
 			itemManager = self.itemManager(),
 			result      = !self.opts(OPT_ENABLED), // if disabled, should just return true
 			i
